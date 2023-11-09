@@ -2,7 +2,7 @@ package qmail
 
 type SmtpAddres struct {
 	Domain string
-	Port   string
+	Port   int
 }
 
 type Message struct {

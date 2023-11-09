@@ -41,7 +41,7 @@ func NewReceivers(to, cc, bcc []string) Receivers {
 	}
 }
 
-func NewSMTP(domain, port string) SmtpAddres {
+func NewSMTP(domain string, port int) SmtpAddres {
 	return SmtpAddres{
 		Domain: domain,
 		Port:   port,
@@ -62,9 +62,9 @@ func (s sendner) Send(smtpAddres SmtpAddres, msg Message, rcvr Receivers) error 
 			return fmt.Errorf("failed to attach file %s: %w", file, err)
 		}
 	}
-	smtpAuth := smtp.PlainAuth("", s.name, s.password, smtpAddres.Domain)
+	smtpAuth := smtp.PlainAuth("", s.addres, s.password, smtpAddres.Domain)
 
-	if err := email.Send(smtpAddres.Domain+":"+smtpAddres.Port, smtpAuth); err != nil {
+	if err := email.Send(smtpAddres.Domain+":"+fmt.Sprint(smtpAddres.Port), smtpAuth); err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
