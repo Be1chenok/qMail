@@ -7,52 +7,50 @@ import (
 	"github.com/jordan-wright/email"
 )
 
-type QMail interface {
-	NewSendner(name, addres, password string) sendner
-	NewMessage(subject, content string, attachFiles []string) message
-	NewReceivers(to, cc, bcc []string) receivers
-	Send(sndr sendner, msg message, rcvr receivers) error
+type Sendner interface {
+	Send(smtpAddres SmtpAddres, msg Message, rcvr Receivers) error
 }
 
-type qMail struct {
-	smtpDomain string
-	smtpPort   string
+type sendner struct {
+	name     string
+	addres   string
+	password string
 }
 
-func New(smtpDomain, smtpPort string) QMail {
-	return &qMail{
-		smtpDomain: smtpDomain,
-		smtpPort:   smtpPort,
+func New(name, addres, password string) Sendner {
+	return &sendner{
+		name:     name,
+		addres:   addres,
+		password: password,
 	}
 }
 
-func (q *qMail) NewSendner(name, addres, password string) sendner {
-	return sendner{
-		Name:     name,
-		Addres:   addres,
-		Password: password,
-	}
-}
-
-func (q *qMail) NewMessage(subject, content string, attachFiles []string) message {
-	return message{
+func NewMessage(subject, content string, attachFiles []string) Message {
+	return Message{
 		Subject:     subject,
 		Content:     content,
 		AttachFiles: attachFiles,
 	}
 }
 
-func (q *qMail) NewReceivers(to, cc, bcc []string) receivers {
-	return receivers{
+func NewReceivers(to, cc, bcc []string) Receivers {
+	return Receivers{
 		To:  to,
 		Cc:  cc,
 		Bcc: bcc,
 	}
 }
 
-func (q qMail) Send(sndr sendner, msg message, rcvr receivers) error {
+func NewSMTP(domain, port string) SmtpAddres {
+	return SmtpAddres{
+		Domain: domain,
+		Port:   port,
+	}
+}
+
+func (s sendner) Send(smtpAddres SmtpAddres, msg Message, rcvr Receivers) error {
 	email := email.NewEmail()
-	email.From = fmt.Sprintf("%s <%s>", sndr.Name, sndr.Addres)
+	email.From = fmt.Sprintf("%s <%s>", s.name, s.addres)
 	email.Subject = msg.Subject
 	email.HTML = []byte(msg.Content)
 	email.To = rcvr.To
@@ -64,10 +62,9 @@ func (q qMail) Send(sndr sendner, msg message, rcvr receivers) error {
 			return fmt.Errorf("failed to attach file %s: %w", file, err)
 		}
 	}
+	smtpAuth := smtp.PlainAuth("", s.name, s.password, smtpAddres.Domain)
 
-	smtpAuth := smtp.PlainAuth("", sndr.Addres, sndr.Password, q.smtpDomain)
-
-	if err := email.Send(q.smtpDomain+":"+q.smtpPort, smtpAuth); err != nil {
+	if err := email.Send(smtpAddres.Domain+":"+smtpAddres.Port, smtpAuth); err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 

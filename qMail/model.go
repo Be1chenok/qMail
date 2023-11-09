@@ -1,24 +1,18 @@
 package qmail
 
-type smtpAddres struct {
-	Host string
-	Port string
+type SmtpAddres struct {
+	Domain string
+	Port   string
 }
 
-type message struct {
+type Message struct {
 	Subject     string
 	Content     string
 	AttachFiles []string
 }
 
-type receivers struct {
+type Receivers struct {
 	To  []string
 	Cc  []string
 	Bcc []string
-}
-
-type sendner struct {
-	Name     string
-	Addres   string
-	Password string
 }
